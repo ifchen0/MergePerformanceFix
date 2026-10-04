@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>Merge Performance Fix</name>
+  <author>ifchen0</author>
+  <packageId>ifchen0.mergeperformancefix</packageId>
+  <supportedVersions><li>1.6</li></supportedVersions>
+  <description>Unofficial performance fix for the vanilla "merge things" hauling job.
+
+Symptom: stutters of 10 to 15 ms when colonists look for hauling work in a colony with large linked storage. In Dubs Performance Analyzer it shows up in the WorkGiver tab as HaulMerge - Hauling - Core, at about 9 ms per call.
+
+Cause: to merge a partial stack, the game looks for another partial stack of the same item in the same storage. It does that by going through every item in the whole storage group - with many linked shelves, or shelves that hold several stacks per cell, that is thousands of items - and it does it again for every partial stack it considers. Most of the time there is nothing to merge with, so all that work finds nothing.
+
+Fix: the game already keeps a list of every partial stack in storage. Before the full search, this mod checks that list for another partial stack of the same item in the same storage. If there is none, the job is skipped at once, which is the answer the full search would have given. If there is one, the vanilla search runs unchanged, so the stack that gets merged is the same as before. Partial stacks without such a partner are also left out of the list the work scanner checks, so the game no longer runs a reachability check on each of them first.
+
+Measured results (3x speed, Dubs Performance Analyzer, HaulMerge in the WorkGiver tab):
+- Average cost per tick: 0.117 ms before, 0.042 to 0.044 ms after. The whole game tick costs about 10 ms in the colony this was tested in, so the average saving is under 1% and does not change TPS noticeably.
+- Worst single tick: 14.6 ms before, 3.5 to 6.1 ms after. Reducing these occasional stutters is the main effect.
+- Each sample had only a few dozen calls, and the game state differed between them, so the worst-tick figures are rough.
+- What is left when there really is something to merge is the vanilla search itself, which this mod keeps on purpose so the merge target does not change.
+
+Status: an experiment, not maintained. It works, but the gain turned out to be small, so I no longer use it. The source is kept for reference.
+
+Notes:
+- Safe to add to or remove from an existing save.
+- Merge orders you give by hand, and hauling by pawns outside your faction, are not touched.
+- Works with any storage mod that uses the normal storage system.</description>
+  <modDependencies>
+    <li><packageId>brrainz.harmony</packageId><displayName>Harmony</displayName><steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl></li>
+  </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+  </loadAfter>
+</ModMetaData>
